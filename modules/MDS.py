@@ -22,7 +22,7 @@ def is_psd(A: np.ndarray, *, tol: float=1e-10) -> bool:
     return bool(np.min(vals) >= -tol)
 
 @dataclass(frozen=True)
-class ClassicalMDS:
+class MultiDimensionalScaler:
     D2: np.ndarray
     def __post_init__(self):
         D2 = np.asarray(self.D2, dtype=float)

@@ -7,7 +7,7 @@ import numpy as np
 PROJECT_ROOT = Path(__file__).resolve().parents[1]  # .../statistical-analysis-toolkit
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from modules.MDS import ClassicalMDS, squared_distance_matrix
+from modules.MDS import MultiDimensionalScaler, squared_distance_matrix
 
 
 def pairwise_sq_dists_reference(X: np.ndarray) -> np.ndarray:
@@ -50,26 +50,26 @@ def test_squared_distance_matrix_matches_reference():
 
 
 # --------------------------
-# ClassicalMDS 入力バリデーション
+# MultiDimensionalScaler 入力バリデーション
 # --------------------------
 def test_init_rejects_non_square():
     D2 = np.zeros((3, 4))
     with pytest.raises(ValueError):
-        ClassicalMDS(D2)
+        MultiDimensionalScaler(D2)
 
 
 def test_init_rejects_non_symmetric():
     D2 = np.array([[0.0, 1.0],
                    [2.0, 0.0]])
     with pytest.raises(ValueError):
-        ClassicalMDS(D2)
+        MultiDimensionalScaler(D2)
 
 
 def test_init_rejects_negative_entries():
     D2 = np.array([[0.0, -1.0],
                    [-1.0, 0.0]])
     with pytest.raises(ValueError):
-        ClassicalMDS(D2)
+        MultiDimensionalScaler(D2)
 
 
 # --------------------------
@@ -80,7 +80,7 @@ def test_gram_matrix_matches_centering_formula():
     X = rng.normal(size=(12, 4))
     D2 = pairwise_sq_dists_reference(X)
 
-    mds = ClassicalMDS(D2)
+    mds = MultiDimensionalScaler(D2)
     B1 = mds.gram_matrix()
     B2 = center_gram_from_D2(D2)
 
@@ -96,7 +96,7 @@ def test_embed_reconstructs_distances_when_k_is_true_dim():
     X_true = rng.normal(size=(n, true_dim))
     D2 = pairwise_sq_dists_reference(X_true)
 
-    mds = ClassicalMDS(D2)
+    mds = MultiDimensionalScaler(D2)
     X_hat = mds.embed(k=true_dim)
 
     # 距離が一致するか（回転・符号の不定性は距離なら問題なし）
@@ -117,8 +117,8 @@ def test_embed_invariant_under_rigid_transform_distance_level():
     D2_1 = pairwise_sq_dists_reference(X)
     D2_2 = pairwise_sq_dists_reference(X2)
 
-    X_hat1 = ClassicalMDS(D2_1).embed(k=d)
-    X_hat2 = ClassicalMDS(D2_2).embed(k=d)
+    X_hat1 = MultiDimensionalScaler(D2_1).embed(k=d)
+    X_hat2 = MultiDimensionalScaler(D2_2).embed(k=d)
 
     assert np.allclose(pairwise_dists(X_hat1), pairwise_dists(X_hat2), atol=1e-6, rtol=1e-6)
 
@@ -130,7 +130,7 @@ def test_is_euclidean_true_for_euclidean_D2():
     rng = np.random.default_rng(4)
     X = rng.normal(size=(15, 5))
     D2 = pairwise_sq_dists_reference(X)
-    mds = ClassicalMDS(D2)
+    mds = MultiDimensionalScaler(D2)
 
     assert mds.is_euclidean(tol=1e-10)
 
@@ -154,7 +154,7 @@ def test_is_euclidean_false_for_non_euclidean_D2_example():
     D2 = np.maximum(D2, 0.0)
     np.fill_diagonal(D2, 0.0)
 
-    mds = ClassicalMDS(D2)
+    mds = MultiDimensionalScaler(D2)
     # 数値誤差もあるので tol は少し厳しすぎない値に
     assert mds.is_euclidean(tol=1e-12) is False
 
@@ -165,7 +165,7 @@ def test_minimal_dimension_equals_true_dim_when_exact():
     X_true = rng.normal(size=(n, true_dim))
     D2 = pairwise_sq_dists_reference(X_true)
 
-    mds = ClassicalMDS(D2)
+    mds = MultiDimensionalScaler(D2)
     k = mds.minimal_dimension(eps=1e-10)
     assert k == true_dim
 
@@ -174,7 +174,7 @@ def test_reconstruction_error_monotone_non_increasing():
     rng = np.random.default_rng(7)
     X = rng.normal(size=(16, 4))
     D2 = pairwise_sq_dists_reference(X)
-    mds = ClassicalMDS(D2)
+    mds = MultiDimensionalScaler(D2)
 
     # k を増やすと再構成誤差は増えない（理論的には単調非増加）
     errs = [mds.reconstruction_error(k) for k in range(0, 5)]
