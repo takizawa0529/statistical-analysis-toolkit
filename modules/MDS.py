@@ -98,19 +98,19 @@ class MultiDimensionalScaler:
         return sum(vals)/max_dim
 
 
-    def reconstruction_error(self, k: int, *, rtol=1e-5, atol=1e-8) -> float:
+    def minimal_dimension(self, *, eps: float=1e-6) -> int:
+        X_full = self.embed(None)
+        max_k = X_full.shape[1]
+        for k in range(max_k+1):
+            err = self._reconstruction_error(k)
+            if err <= eps:
+                return k
+        return max_k
+
+
+    def _reconstruction_error(self, k: int, *, rtol=1e-5, atol=1e-8) -> float:
         Xk = self.embed(k)
         D2_hat = squared_distance_matrix(Xk)
         num = np.linalg.norm(self.D2 - D2_hat)
         den = np.linalg.norm(self.D2) + 1e-15
         return num/den
-
-    def minimal_dimension(self, *, eps: float=1e-6) -> int:
-        X_full = self.embed(None)
-        max_k = X_full.shape[1]
-        for k in range(max_k+1):
-            err = self.reconstruction_error(k)
-            if err <= eps:
-                return k
-        return max_k
-
