@@ -43,31 +43,37 @@ class MultiDimensionalScaler:
     @property
     def n(self) -> int:
         return self.D2.shape[0]
-    
+
+
     def gram_matrix(self) -> np.ndarray:
         n = self.n
         J = np.eye(n) - np.ones((n, n))/n
-        return -0.5*J @ self.D2 @ J
+        B = -0.5*J @ self.D2 @ J
+        return 0.5 * (B + B.T)
+
 
     def is_euclidean(self, *, tol: float=1e-10) -> bool:
         return is_psd(self.gram_matrix(), tol=tol)
 
-    def embed(self, k: int | None=None, *, tol: float=1e-12) -> np.ndarray:
+
+    def _construct_eigs(self, B: np.ndarray, tol: float=1e-12) -> [np.ndarray, np.ndarray]:
+        vals, vecs = np.linalg.eigh(B)
+        idx = np.argsort(vals)[::-1]
+        vals, vecs = vals[idx], vecs[:, idx]
+        tol_eff = max(tol, tol * max(1.0, vals[0]))
+
+        #pos = vals > tol_eff
+        #vals, vecs = vals[pos], vecs[pos]
+        return vals, vecs
+
+
+    def embed(self, k: int | None=None) -> np.ndarray:
         """
         Returns X: (n, k) classical MDS embedding.
         If k is None: use all positive eigenvalues.
         """
         B = self.gram_matrix()
-        B = 0.5 * (B + B.T)
-
-        vals, vecs = np.linalg.eigh(B)
-        idx = np.argsort(vals)[::-1]
-        vals, vecs = vals[idx], vecs[:, idx]
-
-        tol_eff = max(tol, tol * max(1.0, vals[0]))
-
-        pos = vals > tol_eff
-        vals, vecs = vals[pos], vecs[:, pos]
+        vals, vecs = self._construct_eigs(B)
 
         if k is not None:
             k = min(k, len(vals))
@@ -77,6 +83,19 @@ class MultiDimensionalScaler:
         vals = np.maximum(vals, 0.0)
 
         return vecs * np.sqrt(vals)
+
+
+    def contribution(self, k: int | None=None):
+        B = self.gram_matrix()
+        vals, _ = self._construct_eigs(B)
+
+        max_dim = sum(vals)
+        
+        if k is not None:
+            k = min(k, len(vals))
+            vals = vals[:k]
+        
+        return sum(vals)/max_dim
 
 
     def reconstruction_error(self, k: int, *, rtol=1e-5, atol=1e-8) -> float:
