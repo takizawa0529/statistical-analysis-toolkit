@@ -1,5 +1,4 @@
 def check_is_Eucledian_distance(pos):
-    from modules.MDS import DistanceMatrix
     n = len(pos)
     D = DistanceMatrix(pos).distance_matrix()
 

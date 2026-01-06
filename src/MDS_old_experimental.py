@@ -5,7 +5,6 @@ sys.path.append(str(PROJECT_ROOT))
 
 import numpy as np
 
-
 class DistanceMatrix:
     def __init__(self, pos):
         self.pos = pos
@@ -22,7 +21,7 @@ class DistanceMatrix:
         return D
 
 
-    def check_is_Eucledian_distance(self):
+    def is_psd(self):
         n = len(self.pos)
         D = self.distance_matrix()
         d = np.sqrt(D)
@@ -31,7 +30,7 @@ class DistanceMatrix:
             for j in range(i+1, n):
                 for k in range(n):
                     if (k!=i) and (k!=j):
-                        if d[i][j]+d[i][k]<d[j][k]:
+                        if d[j][k] > d[j][i] + d[i][k]:
                             raise ValueError(f"D is not Eucledian distance matrix")
         return True
 
@@ -85,11 +84,6 @@ class MultiDimensionalScaling:
                 return new_axis.T[:i].T
 
         
-        
-
-
-    
-
 if __name__=='__main__':
     D = np.array([[0, 5, 5, 16],
                   [5, 0, 4, 5],
