@@ -3,6 +3,19 @@ from abc import ABC, abstractmethod
 import numpy as np
 
 class BaseDistributionMoments(ABC):
+    """
+    Abstract base class for distribution moments.
+
+    Each subclass represents a probability distribution and must implement:
+    - mean(): E[X]
+    - var(): Var(X)
+
+    Notes
+    -----
+    This class does not define the probability mass/density function.
+    It only provides first and second moments.
+    """
+
     @abstractmethod
     def mean(self):
         pass
@@ -72,7 +85,7 @@ class HyperGeoMoments(BaseDistributionMoments):
             raise ValueError("N must be greater than 0.")
 
     def mean(self):
-        return self.n * self.N/self.M
+        return self.n * self.M/self.N
 
     def var(self):
         return self.n * self.M/self.N * (1 - self.M/self.N) * (self.N-self.n)/(self.N-1)
@@ -85,14 +98,42 @@ class PoissonMoments(BaseDistributionMoments):
             raise ValueError("L must be greater than 0")
         
     def mean(self):
-        return 1/self.L
+        return self.L
 
     def var(self):
-        return 1/self.L
+        return self.L
 
 
 # Grometric Distribution
 class GeometricMoments(BaseDistributionMoments):
+    """
+    Geometric distribution moments.
+
+    Definition
+    ----------
+    Let X be the number of failures before the first success,
+    where each trial succeeds with probability p.
+
+    Parameters
+    ----------
+    p : float
+        Probability of success in each Bernoulli trial.
+
+    Support
+    -------
+    X ∈ {0, 1, 2, ...}
+
+    Moments
+    -------
+    E[X] = (1 - p) / p
+    Var(X) = (1 - p) / p^2
+
+    Notes
+    -----
+    This corresponds to the "failures-before-first-success" definition
+    (not the "number of trials until success" version).
+    """
+
     def __init__(self, p: float):
         self.p = p
         if not isinstance(p, float):
@@ -108,6 +149,40 @@ class GeometricMoments(BaseDistributionMoments):
 
 # Negative Binomial Dostribution
 class NBMoments(BaseDistributionMoments):
+    """
+    Negative binomial distribution moments (r successes version).
+
+    Definition
+    ----------
+    Let X be the number of failures before the r-th success,
+    where each trial succeeds with probability p.
+
+    Parameters
+    ----------
+    r : int
+        Number of successes.
+    p : float
+        Probability of success in each Bernoulli trial.
+
+    Support
+    -------
+    X ∈ {0, 1, 2, ...}
+
+    Moments
+    -------
+    E[X] = r (1 - p) / p
+    Var(X) = r (1 - p) / p^2
+
+    Notes
+    -----
+    This definition is consistent with the geometric distribution
+    when r = 1.
+
+    Some literature defines the negative binomial distribution
+    as the number of trials until the r-th success; this class
+    does NOT use that convention.
+    """
+
     def __init__(self, r: int, p: float):
         self.r = r
         self.p = p
