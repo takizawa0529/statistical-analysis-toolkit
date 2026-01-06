@@ -7,7 +7,7 @@ import numpy as np
 PROJECT_ROOT = Path(__file__).resolve().parents[1]  # .../statistical-analysis-toolkit
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from modules.MDS import MultiDimensionalScaler, squared_distance_matrix
+from src.MDS import MultiDimensionalScaler, squared_distance_matrix
 
 
 def pairwise_sq_dists_reference(X: np.ndarray) -> np.ndarray:
