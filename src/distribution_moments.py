@@ -1,6 +1,26 @@
 from abc import ABC, abstractmethod
-
 import numpy as np
+
+
+def ensure_g(nameu, namel, upper, lower):
+    if lower >= upper:
+        raise ValueError(f"{nameu} must be greater than {namel}")
+
+def ensure_int(name, v):
+    if not isinstance(v, int):
+        raise ValueError(f"{name} must be an int.")
+
+def ensure_int_pos(name, v):
+    if not isinstance(v, int) or (v <= 0):
+        raise ValueError(f"{name} must be a positive int.")
+
+def ensure_prob(name, p):
+    if not 0.0 <= p <= 1.0:
+        raise ValueError(f"{name} must be in [0, 1]")
+
+def ensure_pos(name, v):
+    if v<=0:
+        raise ValueError(f"{name} must be positive.")
 
 class BaseDistributionMoments(ABC):
     """
@@ -27,10 +47,9 @@ class BaseDistributionMoments(ABC):
 
 class DiscreteUniformMoments(BaseDistributionMoments):
     def __init__(self, lower:float, upper:float):
+        ensure_g("upper", "lower", upper, lower)
         self.lower = lower
         self.upper = upper
-        if self.lower > self.upper:
-            raise ValueError("upper must be greater than lower.")
 
     def mean(self):
         return (self.upper + self.lower)/2
@@ -41,9 +60,8 @@ class DiscreteUniformMoments(BaseDistributionMoments):
 
 class BernoulliMoments(BaseDistributionMoments):
     def __init__(self, p: float):
+        ensure_prob("p", p)
         self.p = p
-        if not 0 <= p <= 1:
-            raise ValueError("p must be 0 <= and <= 1.")
     
     def mean(self):
         return self.p
@@ -54,12 +72,11 @@ class BernoulliMoments(BaseDistributionMoments):
 
 class BinomialMoments(BaseDistributionMoments):
     def __init__(self, n: int, p: float):
+        ensure_int("n", n)
+        ensure_prob("p", p)
+
         self.n = n
         self.p = p
-        if not isinstance(n, int):
-            raise ValueError("n must be int.")
-        if not 0 <= p <= 1:
-            raise ValueError("p must be 0 <= and <= 1.")
     
     def mean(self):
         return self.n * self.p
@@ -70,19 +87,16 @@ class BinomialMoments(BaseDistributionMoments):
 # HyperGeometricDistribution
 class HyperGeoMoments(BaseDistributionMoments):
     def __init__(self, N: int, M: int, n: int):
+        ensure_int_pos("N", N)
+        ensure_int("M", M)
+        ensure_int("n", n)
+        if (n>N or n<=0) or (M>N or M<=0):
+            raise ValueError("n and M must be 0 < and <= N")
+        
         self.N = N
         self.M = M
         self.n = n
-        if not isinstance(N, int):
-            raise ValueError("N must be int.")
-        if not isinstance(M, int):
-            raise ValueError("M must be int.")
-        if not isinstance(n, int):
-            raise ValueError("n must be int.")
-        if (n>N or n<=0) or (M>N or M<=0):
-            raise ValueError("n and M must be 0 < and <= N")
-        if (N<=0):
-            raise ValueError("N must be greater than 0.")
+        
 
     def mean(self):
         return self.n * self.M/self.N
@@ -93,9 +107,8 @@ class HyperGeoMoments(BaseDistributionMoments):
 # Poisson Distribution
 class PoissonMoments(BaseDistributionMoments):
     def __init__(self, L):
+        ensure_pos("L", L)
         self.L = L
-        if L<=0:
-            raise ValueError("L must be greater than 0")
         
     def mean(self):
         return self.L
@@ -135,11 +148,8 @@ class GeometricMoments(BaseDistributionMoments):
     """
 
     def __init__(self, p: float):
+        ensure_prob("p", p)
         self.p = p
-        if not isinstance(p, float):
-            raise ValueError("p must be float or 0, 1.")
-        if not 0 <= p <= 1:
-            raise ValueError("p must be 0 <= and <= 1.")
 
     def mean(self):
         return (1-self.p)/self.p
@@ -184,14 +194,10 @@ class NBMoments(BaseDistributionMoments):
     """
 
     def __init__(self, r: int, p: float):
+        ensure_prob("p", p)
+        ensure_int_pos("r", r)
         self.r = r
         self.p = p
-        if not isinstance(r, int):
-            raise ValueError("r must be int.")
-        if not 0 <= p <= 1:
-            raise ValueError("p must be 0 <= and <= 1.")
-        if r<0:
-            raise ValueError("r must be greater than 0.")
 
     def mean(self):
         return self.r * (1-self.p)/self.p
@@ -202,10 +208,9 @@ class NBMoments(BaseDistributionMoments):
 # Continuous Uniform distribution
 class ContinuousUniformMoments(BaseDistributionMoments):
     def __init__(self, lower:float, upper:float):
+        ensure_g("upper", "lower", upper, lower)
         self.lower = lower
         self.upper = upper
-        if self.lower >= self.upper:
-            raise ValueError("upper must be greater than lower.")
 
     def mean(self):
         return (self.upper + self.lower)/2
@@ -217,11 +222,10 @@ class ContinuousUniformMoments(BaseDistributionMoments):
 # Normal Distribution
 class NormalMoments(BaseDistributionMoments):
     def __init__(self, mu: float, sigma2:float):
+        ensure_pos("σ^2", sigma2)
         self.mu = mu
         self.sigma2 = sigma2
-        if sigma2<=0:
-            raise ValueError("σ^2 must be positive.")
-
+        
     def mean(self):
         return self.mu
 
