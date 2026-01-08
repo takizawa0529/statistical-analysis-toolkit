@@ -22,6 +22,17 @@ def ensure_pos(name, v):
     if v<=0:
         raise ValueError(f"{name} must be positive.")
 
+def ensure_is_greater_than_1(name, x, m):
+    if m <= 1:
+        raise ValueError(f"if {name} is less than 1, the {x} of this distribution doesn't exists.")
+
+def ensure_is_greater_than_2(name, x, m):
+    if m <= 2:
+        raise ValueError(f"if {name} is less than 2, the {x} of this distribution doesn't exists.")
+
+def ensure_is_greater_than_4(name, x, m):
+    if m <= 4:
+        raise ValueError(f"if {name} is less than 4, the {x} of this distribution doesn't exists.")
 class BaseDistributionMoments(ABC):
     """
     Abstract base class for distribution moments.
@@ -38,11 +49,11 @@ class BaseDistributionMoments(ABC):
 
     @abstractmethod
     def mean(self):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def var(self):
-        pass
+        raise NotImplementedError()
 
 
 class DiscreteUniformMoments(BaseDistributionMoments):
@@ -232,27 +243,97 @@ class NormalMoments(BaseDistributionMoments):
     def var(self):
         return self.sigma2
 
+# Log-Normal Distribution
+class LogNormalMoments(BaseDistributionMoments):
+    def __init__(self, mu: float, sigma2:float):
+        ensure_pos("σ^2", sigma2)
+        self.mu = mu
+        self.sigma2 = sigma2
+        
+    def mean(self):
+        return np.exp(self.mu + (self.sigma2**2)/2)
+
+    def var(self):
+        return np.exp(2*self.mu+self.sigma2)*(np.exp(self.sigma2)-1)
+
 # Exponential Distribution
 class ExpMoments(BaseDistributionMoments):
-    pass
+    def __init__(self, L):
+        ensure_pos("L", L)
+        self.L = L
+    
+    def mean(self):
+        return 1/self.L
 
+    def var(self):
+        return 1/self.L**2
+
+# Gamma Distribution
 class GammaMoments(BaseDistributionMoments):
-    pass
+    def __init__(self, alpha, beta):
+        ensure_int_pos("α", alpha)
+        ensure_int_pos("β", beta)
+        self.alpha = alpha
+        self.beta = beta
+    
+    def mean(self):
+        return self.alpha/self.beta
 
+    def var(self):
+        return self.alpha/self.beta**2
+
+# Beta Distribution
 class BetaMoments(BaseDistributionMoments):
-    pass
+    def __init__(self, alpha, b):
+        ensure_int_pos("α", alpha)
+        ensure_int_pos("β", b)
+        self.alpha = alpha
+        self.b = b
 
-class CauchyMoments(BaseDistributionMoments):
-    pass
+    def mean(self):
+        return self.alpha / (self.alpha+self.b)
+    
+    def var(self):
+        return self.alpha*self.b / ((self.alpha+self.b)**2 * (self.alpha+self.b+1))
 
-class LogNormMoments(BaseDistributionMoments):
-    pass
-
+# Chi-squared Distribution
 class Chi2Moments(BaseDistributionMoments):
-    pass
+    def __init__(self, k):
+        ensure_int_pos("k", k)
+        self.k = k
 
+    def mean(self):
+        return self.k
+
+    def var(self):
+        return 2 * self.k
+
+# t-distribution
 class TMoments(BaseDistributionMoments):
-    pass
+    def __init__(self, m):
+        ensure_int("m", m)
+        self.m = m
 
+    def mean(self):
+        ensure_is_greater_than_1("m", "mean", self.m)
+        return 0
+
+    def var(self):
+        ensure_is_greater_than_2("m", "variance", self.m)
+        return self.m / (self.m-2)
+
+# F-distribution
 class FMoments(BaseDistributionMoments):
-    pass
+    def __init__(self, m, n):
+        ensure_int_pos("m", m)
+        ensure_int_pos("n", n)
+        self.m = m
+        self.n = n
+
+    def mean(self):
+        ensure_is_greater_than_2("n", "mean", self.n)
+        return self.n / (self.n - 2)
+    
+    def var(self):
+        ensure_is_greater_than_4("n", "variance", self.n)
+        return (2 * self.n**2 * (self.m+self.n-2)) / (self.m * (self.n-2)**2 * (self.n-4))
