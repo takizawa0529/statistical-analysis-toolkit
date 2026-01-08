@@ -107,7 +107,6 @@ class HyperGeoMoments(BaseDistributionMoments):
         self.N = N
         self.M = M
         self.n = n
-        
 
     def mean(self):
         return self.n * self.M/self.N
